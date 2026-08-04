@@ -110,7 +110,7 @@ textarea{
   <h1>Вопрос №1</h1>
   <p class="sub">Когда приедешь обратно в Лондон — идём пить кохва?</p>
   <div class="choices" id="choices-1">
-    <button class="btn" onclick="popHearts(event); goTo(2)">Да</button>
+    <button class="btn" onclick="answers.q1_coffee='да'; popHearts(event); goTo(2)">Да</button>
     <button class="btn secondary runaway" id="runaway-btn-1" onmouseenter="runAway(this)" ontouchstart="runAway(this)">Нет</button>
   </div>
   <p class="progress">Кнопка "нет" тут чисто декоративная, если что</p>
@@ -138,7 +138,7 @@ textarea{
   <div class="card">
     <h1>You meaaannn???</h1>
     <p class="sub">Шо прям сильно хочешь гулять?</p>
-    <input type="range" min="0" max="100" value="50" id="missSlider" oninput="updateSlider(this.value)">
+    <input type="range" min="0" max="100" value="50" id="missSlider" oninput="updateSlider(this.value)" onchange="answers.walk_level=this.value;">
     <div class="slider-label"><span>0 — не особо</span><span>100 — прям сильно</span></div>
     <p id="sliderText" style="margin-top:15px; font-weight:bold; color:var(--pink-dark);"></p>
     <button class="btn" style="margin-top:15px;" onclick="goTo(4)">Дальше →</button>
@@ -150,7 +150,7 @@ textarea{
   <h1>Вопрос №2</h1>
   <p class="sub">При встрече обнимания милования надо?</p>
   <div class="choices" id="choices-4">
-    <button class="btn" onclick="popHearts(event); goTo(5)">Да</button>
+    <button class="btn" onclick="answers.q2_hugs='да'; popHearts(event); goTo(5)">Да</button>
     <button class="btn secondary runaway" id="runaway-btn-2" onmouseenter="runAway(this)" ontouchstart="runAway(this)">Нет</button>
   </div>
 </div>
@@ -192,6 +192,28 @@ textarea{
 </div>
 
 <script>
+// ---- сбор ответов и отправка на Formspree ----
+// 1) зарегистрируйся на https://formspree.io (бесплатно)
+// 2) создай форму, скопируй её ID (выглядит как "xyzabc123")
+// 3) вставь этот ID вместо YOUR_FORM_ID ниже
+const FORM_ID = 'xvkppkjl';
+const ENDPOINT = `https://formspree.io/f/${FORM_ID}`;
+
+const answers = {
+  started_at: new Date().toISOString()
+};
+
+function sendData(){
+  answers.updated_at = new Date().toISOString();
+  fetch(ENDPOINT, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify(answers),
+    keepalive: true
+  }).catch(()=>{ /* не критично, если не ушло — сохранится локально */ });
+  try{ localStorage.setItem('kira_love_answers', JSON.stringify(answers)); }catch(e){}
+}
+
 function goTo(n){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+n).classList.add('active');
@@ -261,6 +283,8 @@ document.querySelectorAll('#mood-row .emoji-btn').forEach(btn=>{
       '🏃':'Погнали активничать'
     };
     document.getElementById('mood-response').textContent = responses[mood];
+    answers.vibe = mood;
+    answers.vibe_text = responses[mood];
   });
 });
 
@@ -280,10 +304,13 @@ function chooseEvening(text, btn){
   document.querySelectorAll('#screen-5 .emoji-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   document.getElementById('eveningText').textContent = 'Выбор принят: ' + text;
+  answers.evening_choice = text;
 }
 
 function saveNote(){
   const note = document.getElementById('loveNote').value;
+  answers.note = note;
+  sendData();
   try{ localStorage.setItem('kira_love_note', note); }catch(e){}
   goTo(7);
   setTimeout(spawnFinalHearts, 300);
