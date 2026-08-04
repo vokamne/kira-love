@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Для моей Кошки 🐾</title>
 <style>
 :root{
@@ -34,6 +37,303 @@ body{
 @keyframes fadeIn{from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:translateY(0);}}
 h1{color:var(--pink-dark); font-size:2em; margin-bottom:10px;}
 p.sub{color:#7a4a5c; font-size:1.1em; max-width:500px;}
+.btn{
+  background:var(--pink);
+  color:white;
+  border:none;
+  padding:16px 32px;
+  border-radius:40px;
+  font-size:1.1em;
+  cursor:pointer;
+  margin:12px;
+  box-shadow:0 6px 15px rgba(255,111,165,.4);
+  transition:transform .2s, background .2s;
+}
+.btn:hover{transform:scale(1.06); background:var(--pink-dark);}
+.btn.secondary{background:transparent; color:var(--pink-dark); border:2px solid var(--pink);}
+.runaway{
+  position:relative;
+  transition:transform .15s ease;
+}
+.choices{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:20px; position:relative; min-height:80px;}
+.heart{
+  position:fixed;
+  font-size:24px;
+  pointer-events:none;
+  animation:floatUp 3s linear forwards;
+  z-index:999;
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) rotate(0deg); opacity:1;}
+  100%{transform:translateY(-100vh) rotate(360deg); opacity:0;}
+}
+.progress{margin-top:30px; color:#a06; font-size:.9em; opacity:.7;}
+.card{
+  background:white;
+  border-radius:20px;
+  padding:30px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  max-width:500px;
+  width:100%;
+}
+.emoji-row{display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:15px;}
+.emoji-btn{
+  font-size:2em;
+  background:white;
+  border:2px solid #ffd6e5;
+  border-radius:16px;
+  padding:12px 18px;
+  cursor:pointer;
+  transition:all .2s;
+}
+.emoji-btn:hover{border-color:var(--pink); transform:scale(1.1);}
+.emoji-btn.selected{background:var(--pink); border-color:var(--pink-dark);}
+input[type=range]{width:100%; margin-top:20px;}
+.slider-label{display:flex; justify-content:space-between; font-size:.85em; color:#a06; margin-top:5px;}
+#finalHearts{position:fixed; inset:0; pointer-events:none; overflow:hidden;}
+.big-heart{color:var(--pink); font-size:4em; animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.15);}}
+.name-tag{color:var(--purple); font-weight:bold;}
+textarea{
+  width:100%; border-radius:12px; border:2px solid #ffd6e5; padding:12px; font-family:inherit; font-size:1em; resize:none; margin-top:15px;
+}
+</style>
+</head>
+<body>
+
+<!-- ЭКРАН 0: приветствие -->
+<div class="screen active" id="screen-0">
+  <h1>Так, короткий опрос</h1>
+  <p class="sub">Ничего серьёзного, пара вопросов, пара тестов. Займёт минуты три. Погнали.</p>
+  <button class="btn" onclick="goTo(1)">Погнали</button>
+</div>
+
+<!-- ЭКРАН 1: миловаться завтра (убегающая кнопка) -->
+<div class="screen" id="screen-1">
+  <h1>Вопрос №1</h1>
+  <p class="sub">Когда приедешь обратно в Лондон — идём пить кохва?</p>
+  <div class="choices" id="choices-1">
+    <button class="btn" onclick="answers.q1_coffee='да'; popHearts(event); goTo(2)">Да</button>
+    <button class="btn secondary runaway" id="runaway-btn-1" onmouseenter="runAway(this)" ontouchstart="runAway(this)">Нет</button>
+  </div>
+  <p class="progress">Кнопка "нет" тут чисто декоративная, если что</p>
+</div>
+
+<!-- ЭКРАН 2: эмодзи-квиз настроение -->
+<div class="screen" id="screen-2">
+  <div class="card">
+    <h1>На каком вайбике будем с тобой?</h1>
+    <p class="sub">Выбери, что ближе всего</p>
+    <div class="emoji-row" id="mood-row">
+      <button class="emoji-btn" data-mood="🌆">🌆</button>
+      <button class="emoji-btn" data-mood="🌳">🌳</button>
+      <button class="emoji-btn" data-mood="☕">☕</button>
+      <button class="emoji-btn" data-mood="🌃">🌃</button>
+      <button class="emoji-btn" data-mood="🏃">🏃</button>
+    </div>
+    <div id="mood-response" style="margin-top:15px; color:#a06; min-height:24px;"></div>
+    <button class="btn" style="margin-top:20px;" onclick="goTo(3)">Дальше →</button>
+  </div>
+</div>
+
+<!-- ЭКРАН 3: слайдер "насколько скучала" -->
+<div class="screen" id="screen-3">
+  <div class="card">
+    <h1>You meaaannn???</h1>
+    <p class="sub">Шо прям сильно хочешь гулять?</p>
+    <input type="range" min="0" max="100" value="50" id="missSlider" oninput="updateSlider(this.value)" onchange="answers.walk_level=this.value;">
+    <div class="slider-label"><span>0 — не особо</span><span>100 — прям сильно</span></div>
+    <p id="sliderText" style="margin-top:15px; font-weight:bold; color:var(--pink-dark);"></p>
+    <button class="btn" style="margin-top:15px;" onclick="goTo(4)">Дальше →</button>
+  </div>
+</div>
+
+<!-- ЭКРАН 4: ещё один вопрос с убегающей кнопкой, но хитрее -->
+<div class="screen" id="screen-4">
+  <h1>Вопрос №2</h1>
+  <p class="sub">При встрече обнимания милования надо?</p>
+  <div class="choices" id="choices-4">
+    <button class="btn" onclick="answers.q2_hugs='да'; popHearts(event); goTo(5)">Да</button>
+    <button class="btn secondary runaway" id="runaway-btn-2" onmouseenter="runAway(this)" ontouchstart="runAway(this)">Нет</button>
+  </div>
+</div>
+
+<!-- ЭКРАН 5: мини-тест "выбери своё" -->
+<div class="screen" id="screen-5">
+  <div class="card">
+    <h1>Мини-тест: идеальный вечер</h1>
+    <p class="sub">Выбери, чего хочется больше</p>
+    <div class="emoji-row">
+      <button class="emoji-btn" onclick="chooseEvening('🍿 Кино, диван, обнимашки', this)">🍿</button>
+      <button class="emoji-btn" onclick="chooseEvening('🍜 Готовим вместе ужин', this)">🍜</button>
+      <button class="emoji-btn" onclick="chooseEvening('🚶 Прогулка вечером', this)">🚶</button>
+      <button class="emoji-btn" onclick="chooseEvening('🎮 Играем вместе', this)">🎮</button>
+    </div>
+    <p id="eveningText" style="margin-top:15px; color:#a06;"></p>
+    <button class="btn" style="margin-top:10px;" onclick="goTo(6)">Дальше →</button>
+  </div>
+</div>
+
+<!-- ЭКРАН 6: открытый вопрос -->
+<div class="screen" id="screen-6">
+  <div class="card">
+    <h1>Вопрос без вариантов ответа</h1>
+    <p class="sub">Чего больше всего хочется сейчас и по приезду обратно?</p>
+    <textarea id="loveNote" rows="4" placeholder="Пиши тут..."></textarea>
+    <button class="btn" style="margin-top:15px;" onclick="saveNote()">Отправить</button>
+  </div>
+</div>
+
+<!-- ЭКРАН 7: финал -->
+<div class="screen" id="screen-7">
+  <div id="finalHearts"></div>
+  <div class="big-heart">❤️</div>
+  <h1 style="margin-top:20px;">Опрос пройден</h1>
+  <p class="sub">Результат: тест сдан, всё в порядке.<br><br>
+  Если серьёзно — я тебя люблю и жду встречи. На этом всё, можешь закрывать вкладку.</p>
+  <button class="btn" onclick="location.reload()">Пройти ещё раз</button>
+</div>
+
+<script>
+// ---- сбор ответов и отправка на Formspree ----
+// 1) зарегистрируйся на https://formspree.io (бесплатно)
+// 2) создай форму, скопируй её ID (выглядит как "xyzabc123")
+// 3) вставь этот ID вместо YOUR_FORM_ID ниже
+const FORM_ID = 'xvkppkjl';
+const ENDPOINT = `https://formspree.io/f/${FORM_ID}`;
+
+const answers = {
+  started_at: new Date().toISOString()
+};
+
+function sendData(){
+  answers.updated_at = new Date().toISOString();
+  fetch(ENDPOINT, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify(answers),
+    keepalive: true
+  }).catch(()=>{ /* не критично, если не ушло — сохранится локально */ });
+  try{ localStorage.setItem('kira_love_answers', JSON.stringify(answers)); }catch(e){}
+}
+
+function goTo(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+n).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Убегающая кнопка "нет" — прыгает по всему экрану, не даётся в руки
+function runAway(btn){
+  if(btn.dataset.fleeing === '1') return;
+  btn.dataset.fleeing = '1';
+  btn.style.position = 'fixed';
+  btn.style.zIndex = 1000;
+  btn.style.transition = 'left .12s ease, top .12s ease';
+
+  function place(){
+    const w = btn.offsetWidth || 120;
+    const h = btn.offsetHeight || 50;
+    const maxX = window.innerWidth - w - 20;
+    const maxY = window.innerHeight - h - 20;
+    const x = 10 + Math.random() * Math.max(maxX - 10, 0);
+    const y = 10 + Math.random() * Math.max(maxY - 10, 0);
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+  }
+  place();
+
+  // если курсор/палец подбирается близко — сразу прыгать ещё раз
+  function distanceCheck(e){
+    const rect = btn.getBoundingClientRect();
+    const cx = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+    const cy = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+    if(cx === null) return;
+    const dx = cx - (rect.left + rect.width/2);
+    const dy = cy - (rect.top + rect.height/2);
+    if(Math.sqrt(dx*dx + dy*dy) < 140){
+      place();
+    }
+  }
+  document.addEventListener('mousemove', distanceCheck);
+  document.addEventListener('touchmove', distanceCheck, {passive:true});
+}
+
+// Летающие сердечки при клике "да"
+function popHearts(e){
+  for(let i=0;i<12;i++){
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.textContent = ['❤️','💕','💖','😻','🥰'][Math.floor(Math.random()*5)];
+    h.style.left = (e.clientX + (Math.random()*80-40)) + 'px';
+    h.style.top = (e.clientY) + 'px';
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 3000);
+  }
+}
+
+// Настроение
+document.querySelectorAll('#mood-row .emoji-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#mood-row .emoji-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const mood = btn.dataset.mood;
+    const responses = {
+      '🌆':'Погулять по городу, окей',
+      '🌳':'В парк тогда',
+      '☕':'Значит куда-нибудь сесть и поговорить',
+      '🌃':'Вечерний вайб, принято',
+      '🏃':'Погнали активничать'
+    };
+    document.getElementById('mood-response').textContent = responses[mood];
+    answers.vibe = mood;
+    answers.vibe_text = responses[mood];
+  });
+});
+
+function updateSlider(v){
+  const texts = [
+    [0,20,'Ну и ладно 🙂'],
+    [21,50,'Терпимо'],
+    [51,80,'Приятно слышать'],
+    [81,100,'Взаимно, если что']
+  ];
+  const match = texts.find(t=>v>=t[0]&&v<=t[1]);
+  document.getElementById('sliderText').textContent = match[2] + ' (' + v + '/100)';
+}
+updateSlider(50);
+
+function chooseEvening(text, btn){
+  document.querySelectorAll('#screen-5 .emoji-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('eveningText').textContent = 'Выбор принят: ' + text;
+  answers.evening_choice = text;
+}
+
+function saveNote(){
+  const note = document.getElementById('loveNote').value;
+  answers.note = note;
+  sendData();
+  try{ localStorage.setItem('kira_love_note', note); }catch(e){}
+  goTo(7);
+  setTimeout(spawnFinalHearts, 300);
+}
+
+function spawnFinalHearts(){
+  const container = document.getElementById('finalHearts');
+  setInterval(()=>{
+    const h = document.createElement('div');
+    h.className='heart';
+    h.style.left = Math.random()*window.innerWidth + 'px';
+    h.style.top = window.innerHeight + 'px';
+    h.textContent = ['❤️','💕','💖'][Math.floor(Math.random()*3)];
+    container.appendChild(h);
+    setTimeout(()=>h.remove(), 3000);
+  }, 400);
+}
+</script>
+</body>
+</html>
 .btn{
   background:var(--pink);
   color:white;
